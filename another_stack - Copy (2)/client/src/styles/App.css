@@ -1,0 +1,35 @@
+/* src/styles/App.css */
+.homepage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f3f4f6;
+  }
+  
+  .homepage h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #0073e6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #005bb5;
+  }
+  
