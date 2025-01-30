@@ -19,7 +19,7 @@ module.exports = async (req, res, next) => {
     //console.log("Decoded Token:", decoded);
    
     // Request the user service to validate the user
-    const response = await axios.get(`http://localhost:8000/api/auth/users/${req.userId}`);
+    const response = await axios.get(`http://auth:3001/api/auth/users/${req.userId}`);
     
     // Check if the user exists
     if (!response.data || !response.data.user) {

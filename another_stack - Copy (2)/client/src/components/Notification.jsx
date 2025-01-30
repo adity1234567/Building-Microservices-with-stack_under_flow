@@ -7,7 +7,7 @@ const Notification = ({ onNotificationClick }) => {
 
   const checkForNewNotifications = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/notifications/unread', {
+      const response = await axios.get('http://localhost/api/notifications/unread', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`, // Assuming token is stored in localStorage
         },

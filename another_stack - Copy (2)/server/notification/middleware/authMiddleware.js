@@ -12,14 +12,14 @@ module.exports = async (req, res, next) => {
 
   try {
     // Verify the JWT token
-    console.log("Verifying Token in notfi...");
+   // console.log("Verifying Token in notfi...");
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.userId;
 
     //console.log("Decoded Token:", decoded);
    
     // Request the user service to validate the user
-    const response = await axios.get(`http://localhost:8000/api/auth/users/${req.userId}`);
+    const response = await axios.get(`http://auth:3001/api/auth/users/${req.userId}`);
     
     // Check if the user exists
     if (!response.data || !response.data.user) {
@@ -27,7 +27,7 @@ module.exports = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    console.log("User found in notifcation");
+    //console.log("User found in notifcation");
     req.user = response.data.user; // Attach the user object to the request
     next(); // Pass control to the next middleware
 

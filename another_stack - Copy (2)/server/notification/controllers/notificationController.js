@@ -28,7 +28,7 @@ exports.createNotification = async (req, res) => {
     }
 
     // Bulk insert valid notifications
-    console.log('Bulk Notification Data:', validNotifications);
+    // console.log('Bulk Notification Data:', validNotifications);
     const createdNotifications = await Notification.insertMany(validNotifications);
 
     return res.status(201).json({
@@ -48,7 +48,7 @@ exports.createNotification = async (req, res) => {
 
 
 exports.getUnreadNotifications = async (req, res) => {
-  console.log("Get Unread Notifications");
+ // console.log("Get Unread Notifications");
   const token = req.header('Authorization')?.split(' ')[1];
   try {
     if (!req.userId) {
@@ -70,13 +70,13 @@ exports.getUnreadNotifications = async (req, res) => {
         try {
           // Get post details from the post service
           const postResponse = await axios.get(
-            `http://localhost:8000/api/posts/${notification.postId}`,{
+            `http://posts:3002/api/posts/${notification.postId}`,{
               headers: { Authorization: `Bearer ${token}` }
             }
           );
 
-        //  console.log("Total Post Response for notifications:",postResponse.length );
-          const postData = postResponse.data;
+         console.log("Total Post Response for notifications:",postResponse.data.post );
+          const postData = postResponse.data.post;
           
           return {
             _id: notification._id,

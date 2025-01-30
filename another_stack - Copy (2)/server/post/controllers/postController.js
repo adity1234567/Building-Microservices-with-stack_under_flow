@@ -189,8 +189,8 @@ exports.createPost = async (req, res) => {
 
     // Fetch user profile and other users in parallel
     const [userResponse, otherUsersResponse] = await Promise.all([
-      axios.get(`http://localhost:8000/api/auth/users/${req.userId}`),
-      axios.get(`http://localhost:8000/api/auth/otherUsers/${req.userId}`)
+      axios.get(`http://auth:3001/api/auth/users/${req.userId}`),
+      axios.get(`http://auth:3001/api/auth/otherUsers/${req.userId}`)
     ]);
 
     const user = userResponse.data;
@@ -207,15 +207,23 @@ exports.createPost = async (req, res) => {
     // Upload code snippet if provided
     if (codeSnippet) {
       try {
-        const codeFileName = `${uuidv4()}.${language || 'txt'}`;
+       const codeFileName = `${uuidv4()}.${language || 'txt'}`;
+       // const codeFileName = `${Date.now()}_${code.originalname}`;
         await minioClient.putObject(
           process.env.MINIO_BUCKET,
           codeFileName,
-          Buffer.from(codeSnippet),
-          { 'Content-Type': 'text/plain' }
+          file.buffer,
         );
+        /*
+          await minioClient.putObject(
+          process.env.MINIO_BUCKET,
+          uploadedFileName,
+          file.buffer
+        );
+        uploadedFileUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET}/${uploadedFileName}`;
+        */
         codeFileUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET}/${codeFileName}`;
-        console.log("✅ Successfully uploaded:",  codeFileUrl);
+        console.log("✅ Successfully uploaded:", codeFileUrl);
         console.log("✅ Successfully uploaded:", codeFileName);
       } catch (error) {
         console.error("❌ MinIO code upload failed:", error);
@@ -226,14 +234,15 @@ exports.createPost = async (req, res) => {
     // Upload file if provided
     if (file) {
       try {
-        const uploadedFileName = `${uuidv4()}_${file.originalname}`;
+        // const uploadedFileName = `${uuidv4()}_${file.originalname}`;
+        const uploadedFileName = `${Date.now()}_${file.originalname}`;
         await minioClient.putObject(
           process.env.MINIO_BUCKET,
           uploadedFileName,
           file.buffer
         );
         uploadedFileUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${process.env.MINIO_BUCKET}/${uploadedFileName}`;
-        console.log("✅ Successfully uploaded:",  uploadedFileUrl);
+        console.log("✅ Successfully uploaded:", uploadedFileUrl);
         console.log("✅ Successfully uploaded file:", uploadedFileName);
       } catch (error) {
         console.error("❌ MinIO file upload failed:", error);
@@ -242,7 +251,7 @@ exports.createPost = async (req, res) => {
     }
 
     // Get author details
-    const authorResponse = await axios.get('http://localhost:8000/api/auth/profile', {
+    const authorResponse = await axios.get('http://auth:3001/api/auth/profile', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const author = authorResponse.data;
@@ -272,30 +281,33 @@ exports.createPost = async (req, res) => {
       }));
 
       /** */
-     // console.log("📩 Sending notifications:", notifications);
-    /*  
-      console.log("token", token);
-     const response1= await axios.post('http://localhost:8000/api/notifications/create', {
-        notifications
-      });
-      localStorage.setItem('token', response1.data.token);
+      // console.log("📩 Sending notifications:", notifications);
+      /*  
+        console.log("token", token);
+       const response1= await axios.post('http://localhost:8000/api/notifications/create', {
+          notifications
+        });
+        localStorage.setItem('token', response1.data.token);
+      }
+  
+  */
+      //console.log("token", token);
+      //const token1 = localStorage.getItem('token');
+      //console.log("token1", token1);
+      const response = await axios.post(
+        'http://notif:5003/api/notifications/create',
+        { notifications },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
     }
 
-*/
-//console.log("token", token);
-//const token1 = localStorage.getItem('token');
-//console.log("token1", token1);
-const response = await axios.post(
-  'http://localhost:8000/api/notifications/create',
-  { notifications },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  }
-);
-    }
+    console.log("line after noti created");
+    
     // Send success response
     return res.status(201).json(post);
 
@@ -303,9 +315,9 @@ const response = await axios.post(
     console.error("Error in createPost:", error.response?.data || error.message);
     // Ensure we haven't already sent a response
     if (!res.headersSent) {
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: 'An error occurred while creating the post',
-        error: error.message 
+        error: error.message
       });
     }
   }
@@ -313,13 +325,13 @@ const response = await axios.post(
 
 // Keep getPosts and getPostById as they are, but add error handling
 exports.getPosts = async (req, res) => {
- // console.log("🔍 Fetching posts...");
+  // console.log("🔍 Fetching posts...");
   try {
     const posts = await Post.find().sort({ createdAt: -1 });
 
     const postsWithAuthor = await Promise.all(posts.map(async (post) => {
       try {
-        const userResponse = await axios.get(`http://localhost:8000/api/auth/users/${post.author}`);
+        const userResponse = await axios.get(`http://auth:3001/api/auth/users/${post.author}`);
         const username = userResponse.data.username;
         return { ...post.toObject(), author: { username } };
       } catch (error) {
@@ -328,13 +340,13 @@ exports.getPosts = async (req, res) => {
       }
     }));
 
-  //  console.log("✅ Fetched posts:", postsWithAuthor.length);
+    //  console.log("✅ Fetched posts:", postsWithAuthor.length);
     return res.json(postsWithAuthor);
   } catch (error) {
     console.error("Error in getPosts:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: 'An error occurred while fetching posts',
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -343,14 +355,14 @@ exports.getPostById = async (req, res) => {
   try {
     const { postId } = req.params;
     const post = await Post.findById(postId);
-    
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
     let author = { username: 'Unknown' };
     try {
-      const userResponse = await axios.get(`http://localhost:8000/api/auth/users/${post.author}`);
+      const userResponse = await axios.get(`http://auth:3001/api/auth/users/${post.author}`);
       author = userResponse.data || { username: 'Unknown' };
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -362,7 +374,7 @@ exports.getPostById = async (req, res) => {
     if (post.codeFileUrl) {
       try {
         const codeFileName = post.codeFileUrl.split('/').pop();
-        const codeFileStream = await minioClient.getObject(process.env.MINIO_BUCKET, codeFileName);
+        const codeFileStream = await minioClient.getObject("stack-end", codeFileName);
         codeContent = await streamToString(codeFileStream);
       } catch (error) {
         console.error("Error fetching code content:", error);
@@ -386,9 +398,9 @@ exports.getPostById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getPostById:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: 'An error occurred while fetching the post',
-      error: error.message 
+      error: error.message
     });
   }
 };

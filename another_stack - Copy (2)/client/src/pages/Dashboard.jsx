@@ -34,7 +34,9 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setNotifications(data);
+      console.log("API Response for notifications:", data);
+
+      setNotifications(data.notifications);
       setShowNotificationDot(notifications.filter(notif => !notif.read).length > 0);
 
       //setShowNotificationDot(data.some((notif) => !notif.read));
@@ -157,12 +159,12 @@ const Dashboard = () => {
                 }`}
               >
                 <p style={{ color: notification.read ? 'green' : 'red' }}>
-                  Posted by: {notification.postId.author?.username || "Author Unknown"}
+                  Posted by: {notification.author?.username || "Author Unknown"}
                 </p>
                 <button
                   onClick={() =>
                     handleViewPostFromNotification(
-                      notification.postId._id,
+                      notification.postId,
                       notification._id
                     )
                   }

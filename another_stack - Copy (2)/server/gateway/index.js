@@ -27,7 +27,7 @@ app.use('/api/posts', proxy('http://localhost:3002', {
   },
 }));
 
-app.use('/api/notifications', proxy('http://localhost:3003', {
+app.use('/api/notifications', proxy('http://localhost:5003', {
   proxyReqPathResolver: (req) => req.url,
   proxyErrorHandler: (err, res, next) => {
     console.error('Notifications Proxy Error:', err);
